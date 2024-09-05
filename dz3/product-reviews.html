@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отзывы о продуктах</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .review {
+            background-color: white;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .product {
+            cursor: pointer;
+            color: #3498db;
+            margin: 5px 0;
+            padding: 5px;
+            transition: background-color 0.3s;
+        }
+        .product:hover {
+            background-color: #ecf0f1;
+        }
+        #reviewsList {
+            margin-top: 20px;
+        }
+        .section {
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>Отзывы о продуктах</h1>
+    
+    <div class="section">
+        <h2>Добавить отзыв</h2>
+        <input type="text" id="productName" placeholder="Название продукта">
+        <textarea id="reviewText" placeholder="Ваш отзыв" rows="4"></textarea>
+        <button onclick="addReview()">Добавить отзыв</button>
+    </div>
+    
+    <div class="section">
+        <h2>Просмотр отзывов</h2>
+        <div id="productsList"></div>
+        <div id="reviewsList"></div>
+    </div>
+
+    <script>
+        // Функция для добавления отзыва
+        function addReview() {
+            const productName = document.getElementById('productName').value.trim();
+            const reviewText = document.getElementById('reviewText').value.trim();
+            
+            if (!productName || !reviewText) {
+                alert('Пожалуйста, заполните все поля');
+                return;
+            }
+            
+            let reviews = JSON.parse(localStorage.getItem('reviews')) || {};
+            if (!reviews[productName]) {
+                reviews[productName] = [];
+            }
+            
+            reviews[productName].push({
+                id: Date.now(),
+                text: reviewText
+            });
+            
+            localStorage.setItem('reviews', JSON.stringify(reviews));
+            
+            alert('Отзыв добавлен');
+            document.getElementById('productName').value = '';
+            document.getElementById('reviewText').value = '';
+            
+            displayProducts();
+        }
+        
+        // Функция для отображения списка продуктов
+        function displayProducts() {
+            const reviews = JSON.parse(localStorage.getItem('reviews')) || {};
+            const productsList = document.getElementById('productsList');
+            productsList.innerHTML = '<h3>Продукты:</h3>';
+            
+            for (let product in reviews) {
+                const productElement = document.createElement('div');
+                productElement.classList.add('product');
+                productElement.textContent = product;
+                productElement.onclick = () => displayReviews(product);
+                productsList.appendChild(productElement);
+            }
+        }
+        
+        // Функция для отображения отзывов о продукте
+        function displayReviews(product) {
+            const reviews = JSON.parse(localStorage.getItem('reviews')) || {};
+            const reviewsList = document.getElementById('reviewsList');
+            reviewsList.innerHTML = `<h3>Отзывы о ${product}:</h3>`;
+            
+            if (reviews[product]) {
+                reviews[product].forEach(review => {
+                    const reviewElement = document.createElement('div');
+                    reviewElement.classList.add('review');
+                    reviewElement.innerHTML = `
+                        ${review.text}
+                        <button onclick="deleteReview('${product}', ${review.id})">Удалить</button>
+                    `;
+                    reviewsList.appendChild(reviewElement);
+                });
+            }
+        }
+        
+        // Функция для удаления отзыва
+        function deleteReview(product, reviewId) {
+            let reviews = JSON.parse(localStorage.getItem('reviews')) || {};
+            
+            if (reviews[product]) {
+                reviews[product] = reviews[product].filter(review => review.id !== reviewId);
+                
+                if (reviews[product].length === 0) {
+                    delete reviews[product];
+                }
+                
+                localStorage.setItem('reviews', JSON.stringify(reviews));
+                
+                displayProducts();
+                displayReviews(product);
+            }
+        }
+        
+        // Инициализация страницы
+        displayProducts();
+    </script>
+</body>
+</html>
